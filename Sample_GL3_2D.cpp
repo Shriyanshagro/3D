@@ -201,6 +201,12 @@ float targetto[4] = {0,0,0,0};
 float botpos[4] = {0,0.97f,1.1f,0.97f};
 float posz=0;
 float posx=0;
+float panx =0 ;
+float panz =0;
+int num_obs = 4;
+float obsx[51] = {0,0.5,1,0.2,.8};
+float obsz[51] = {0,0.5,1,0.8,0.1};
+// float obstacle_rotation[51] ;
 
 /* Executed when a regular key is pressed */
 void keyboardDown (unsigned char key, int x, int y)
@@ -256,6 +262,33 @@ void keyboardUp (unsigned char key, int x, int y)
 /* Executed when a special key is pressed */
 void keyboardSpecialDown (int key, int x, int y)
 {
+    switch(key){
+            case GLUT_KEY_UP:
+                // if(panx<=1)
+                // {
+                    panx-=0.1f;
+                // }
+            break;
+            case GLUT_KEY_DOWN:
+            // if(panx>=-1)
+            // {
+                panx+=0.1f;
+            // }
+            break;
+            case GLUT_KEY_RIGHT:
+                // if(panz<=35)
+                // {
+                    panz-=0.1f;
+                // }
+            break;
+            case GLUT_KEY_LEFT:
+                // if(panz>=-35)
+                // {
+                    panz+=0.1f;
+                // }
+            break;
+
+    }
 }
 
 /* Executed when a special key is released */
@@ -308,7 +341,7 @@ void reshapeWindow (int width, int height)
     // Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle;
+VAO *triangle, *rectangle,*obstacle[50];
 
 // Creates the triangle object used in this sample code
 void createTriangle ()
@@ -625,7 +658,136 @@ void createRectangle ()
 }
 
 
+void createobstacle ()
+{
+  // GL3 accepts only Triangles. Quads are not supported static
+  static const GLfloat vertex_buffer_data [] = {
+       -0.05f,-0.05f,-0.05f, // triangle 1 : begin
 
+       -0.05f,-0.05f, 0.05f,
+
+       -0.05f, 0.05f, 0.05f, // triangle 1 : end
+
+       0.05f, 0.05f,-0.05f, // triangle 2 : begin
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f, 0.05f,-0.05f, // triangle 2 : end
+
+       0.05f,-0.05f, 0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       0.05f, 0.05f,-0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       -0.05f, 0.05f,-0.05f,
+
+       0.05f,-0.05f, 0.05f,
+
+       -0.05f,-0.05f, 0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       -0.05f,-0.05f, 0.05f,
+
+       0.05f,-0.05f, 0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       0.05f, 0.05f,-0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       0.05f,-0.05f, 0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       0.05f, 0.05f,-0.05f,
+
+       -0.05f, 0.05f,-0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       -0.05f, 0.05f,-0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       0.05f,-0.05f, 0.05f
+  };
+
+  static const GLfloat color_buffer_data [] = {
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+      0,0,0,
+
+  };
+
+  // create3DObject creates and returns a handle to a VAO that can be used later
+  for(int r=1;r<=num_obs;r++)
+      obstacle[r] = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
+}
+
+void fall_down(){
+    for(int r=1;r<=num_obs;r++){
+        if(posx<=(-obsx[r]+0.05f) && posx>=(-obsx[r]-0.05f) && posz<=(-obsz[r]+0.05) && posz>=(-obsz[r]-0.05)) {
+            cout<<"You Lose!!"<<endl;
+            exit(0);
+        }
+    }
+}
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 void draw ()
@@ -647,7 +809,7 @@ void draw ()
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
-  Matrices.view = glm::lookAt(glm::vec3(eyefrom[1],eyefrom[2],eyefrom[3]), glm::vec3(targetto[1],targetto[2],targetto[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
+  Matrices.view = glm::lookAt(glm::vec3(eyefrom[1]+panx,eyefrom[2],eyefrom[3]+panz), glm::vec3(targetto[1],targetto[2],targetto[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
 
   // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
@@ -686,6 +848,27 @@ void draw ()
   // draw3DObject draws the VAO given to it using current MVP matrix
   draw3DObject(rectangle);
 
+
+  glm::mat4 translateobstacle[num_obs+1],obstacle_rotation[num_obs+1],rotateobstacle[num_obs+1];
+  for(int r=1;r<=num_obs;r++)
+  {
+      Matrices.model = glm::mat4(1.0f);
+    //   obstacle_rotation[r]=0.0f;
+      translateobstacle[r] = glm::translate (glm::vec3(botpos[1]-obsx[r],botpos[2]-0.12f,botpos[3]-obsz[r]));        // glTranslatef
+    //   rotateobstacle[r] = glm::rotate((float)(obstacle_rotation[r]*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+      Matrices.model *= (translateobstacle[r] );
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+      // draw3DObject draws the VAO given to it using current MVP matrix
+      draw3DObject(obstacle[r]);
+
+    //   obstacle_rotation[r] = obstacle_rotation[r] + obstacle_rot_dir[r]*obstacle_rot_status[r];
+
+  }
+
+  fall_down();
+
   // Swap the frame buffers
   glutSwapBuffers ();
 
@@ -695,6 +878,7 @@ void draw ()
   //camera_rotation_angle++; // Simulating camera rotation
   triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
   rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
+
 }
 
 /* Executed when the program is idle (no I/O activity) */
@@ -777,7 +961,7 @@ void initGL (int width, int height)
 {
 	// Create the models
 	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-
+    createobstacle();
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
 	// Get a handle for our "MVP" uniform
