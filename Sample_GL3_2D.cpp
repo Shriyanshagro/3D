@@ -189,11 +189,18 @@ void draw3DObject (struct VAO* vao)
 /**************************
  * Customizable functions *
  **************************/
-
+float camera_rotation_angle = 90;
+float rectangle_rotation = 0;
+float triangle_rotation = 0;
 float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
 bool triangle_rot_status = false;
-bool rectangle_rot_status = true;
+bool rectangle_rot_status = false;
+float eyefrom[4] = {0,1.2f,1.4f,1.2f} ;
+float targetto[4] = {0,0,0,0};
+float botpos[4] = {0,0.97f,1.1f,0.97f};
+float posz=0;
+float posx=0;
 
 /* Executed when a regular key is pressed */
 void keyboardDown (unsigned char key, int x, int y)
@@ -203,6 +210,24 @@ void keyboardDown (unsigned char key, int x, int y)
         case 'q':
         case 27: //ESC
             exit (0);
+        case 'd':
+        case 'D':
+        if(posx<0)
+            posx+=0.05f;
+        break;
+        case 'a':
+        case 'A':
+            posx-=0.05f;
+        break;
+        case 'w':
+        case 'W':
+            posz-=0.05f;
+        break;
+        case 's':
+        case 'S':
+        if(posz<0)
+            posz+=0.05f;
+        break;
         default:
             break;
     }
@@ -440,40 +465,166 @@ void createTriangle ()
   };
 
   // create3DObject creates and returns a handle to a VAO that can be used later
-  triangle = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_LINE);
+  triangle = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
 void createRectangle ()
 {
   // GL3 accepts only Triangles. Quads are not supported static
-  const GLfloat vertex_buffer_data [] = {
-    -1.2,-1,0, // vertex 1
-    1.2,-1,0, // vertex 2
-    1.2, 1,0, // vertex 3
+  static const GLfloat vertex_buffer_data [] = {
+      -0.05f,-0.05f,-0.05f, // triangle 1 : begin
 
-    1.2, 1,0, // vertex 3
-    -1.2, 1,0, // vertex 4
-    -1.2,-1,0  // vertex 1
+       -0.05f,-0.05f, 0.05f,
+
+       -0.05f, 0.05f, 0.05f, // triangle 1 : end
+
+       0.05f, 0.05f,-0.05f, // triangle 2 : begin
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f, 0.05f,-0.05f, // triangle 2 : end
+
+       0.05f,-0.05f, 0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       0.05f, 0.05f,-0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       -0.05f, 0.05f,-0.05f,
+
+       0.05f,-0.05f, 0.05f,
+
+       -0.05f,-0.05f, 0.05f,
+
+       -0.05f,-0.05f,-0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       -0.05f,-0.05f, 0.05f,
+
+       0.05f,-0.05f, 0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       0.05f, 0.05f,-0.05f,
+
+       0.05f,-0.05f,-0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       0.05f,-0.05f, 0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       0.05f, 0.05f,-0.05f,
+
+       -0.05f, 0.05f,-0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       -0.05f, 0.05f,-0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       0.05f, 0.05f, 0.05f,
+
+       -0.05f, 0.05f, 0.05f,
+
+       0.05f,-0.05f, 0.05f
   };
 
   static const GLfloat color_buffer_data [] = {
-    1,0,0, // color 1
-    0,0,1, // color 2
-    0,1,0, // color 3
+      0.583f,  0.771f,  0.014f,
 
-    0,1,0, // color 3
-    0.3,0.3,0.3, // color 4
-    1,0,0  // color 1
+       0.609f,  0.115f,  0.436f,
+
+       0.327f,  0.483f,  0.844f,
+
+       0.822f,  0.569f,  0.201f,
+
+       0.435f,  0.602f,  0.223f,
+
+       0.310f,  0.747f,  0.185f,
+
+       0.597f,  0.770f,  0.761f,
+
+       0.559f,  0.436f,  0.730f,
+
+       0.359f,  0.583f,  0.152f,
+
+       0.483f,  0.596f,  0.789f,
+
+       0.559f,  0.861f,  0.639f,
+
+       0.195f,  0.548f,  0.859f,
+
+       0.014f,  0.184f,  0.576f,
+
+       0.771f,  0.328f,  0.970f,
+
+       0.406f,  0.615f,  0.116f,
+
+       0.676f,  0.977f,  0.133f,
+
+       0.971f,  0.572f,  0.833f,
+
+       0.140f,  0.616f,  0.489f,
+
+       0.997f,  0.513f,  0.064f,
+
+       0.945f,  0.719f,  0.592f,
+
+       0.543f,  0.021f,  0.978f,
+
+       0.279f,  0.317f,  0.505f,
+
+       0.167f,  0.620f,  0.077f,
+
+       0.347f,  0.857f,  0.137f,
+
+       0.055f,  0.953f,  0.042f,
+
+       0.714f,  0.505f,  0.345f,
+
+       0.783f,  0.290f,  0.734f,
+
+       0.722f,  0.645f,  0.174f,
+
+       0.302f,  0.455f,  0.848f,
+
+       0.225f,  0.587f,  0.040f,
+
+       0.517f,  0.713f,  0.338f,
+
+       0.053f,  0.959f,  0.120f,
+
+       0.393f,  0.621f,  0.362f,
+
+       0.673f,  0.211f,  0.457f,
+
+       0.820f,  0.883f,  0.371f,
+
+       0.982f,  0.099f,  0.879f
   };
 
+
   // create3DObject creates and returns a handle to a VAO that can be used later
-  rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+  rectangle = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
 
-float camera_rotation_angle = 90;
-float rectangle_rotation = 0;
-float triangle_rotation = 10;
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
@@ -496,7 +647,7 @@ void draw ()
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
-  Matrices.view = glm::lookAt(glm::vec3(3,3,3), glm::vec3(0,0,0), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
+  Matrices.view = glm::lookAt(glm::vec3(eyefrom[1],eyefrom[2],eyefrom[3]), glm::vec3(targetto[1],targetto[2],targetto[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
 
   // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
@@ -526,14 +677,14 @@ void draw ()
 
   Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(2, 0, 0));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1]+posx,botpos[2],botpos[3]+posz));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-  // draw3DObject(rectangle);
+  draw3DObject(rectangle);
 
   // Swap the frame buffers
   glutSwapBuffers ();
