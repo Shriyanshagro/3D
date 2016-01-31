@@ -901,7 +901,7 @@ void initGLUT (int& argc, char** argv, int width, int height)
     glutInitContextVersion (3, 3); // Init GL 3.3
     glutInitContextFlags (GLUT_CORE_PROFILE); // Use Core profile - older functions are deprecated
     glutInitWindowSize (width, height);
-    glutCreateWindow ("Sample OpenGL3.3 Application");
+    glutCreateWindow ("D.N.A.H.B Games");
 
     // Initialize GLEW, Needed in Core profile
     glewExperimental = GL_TRUE;
