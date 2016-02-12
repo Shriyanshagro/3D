@@ -203,15 +203,15 @@ float posz=0;
 float posx=0;
 float panx =0 ;
 float panz =0;
-int num_obs = 4;
-float obsx[51] = {0,0.5,1,0.2,.8};
-float obsz[51] = {0,0.5,1,0.8,0.1};
+int num_obs = 6;
+float obsx[51];
+float obsz[51] ;
 int no_cam = 4 ;
 float camfrom[4] ;
 float camlook[4] ;
 int campos=0;
-double mov[5] ;
-double dir[5] ;
+double mov[51] ;
+float dir[51] ;
 // float obstacle_rotation[51] ;
 
 /* Executed when a regular key is pressed */
@@ -326,6 +326,7 @@ void mouseClick (int button, int state, int x, int y)
 /* Executed when the mouse moves to position ('x', 'y') */
 void mouseMotion (int x, int y)
 {
+
 }
 
 
@@ -789,14 +790,21 @@ void createobstacle ()
       obstacle[r] = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
       mov[r] = rand()%5;
       mov[r] /=100;
-      dir[r] = rand()%2;
-      if(dir[r]==0)
+      float temp = rand()%2;
+      if(temp==0)
       {
-          dir[r]++;
+          temp++;
       }
       else{
-          dir[r]*=-1;
+          temp*=-1;
       }
+      obsx[r] = rand()%10;
+      obsx[r] /=10;
+      obsx[r] *= temp;
+      obsz[r] = rand()%10;
+      obsz[r] /=10;
+      obsz[r] *=temp;
+      dir[r] = temp;
   }
 }
 
@@ -921,7 +929,7 @@ void draw ()
         dir[r]*=-1;
     }
     mov[r]+=0.001*dir[r];
-      translateobstacle[r] = glm::translate (glm::vec3(botpos[1]-obsx[r],botpos[2]-0.12f+mov[r],botpos[3]-obsz[r]));        // glTranslatef
+      translateobstacle[r] = glm::translate (glm::vec3(obsx[r],botpos[2]-0.12f+mov[r],obsz[r]));        // glTranslatef
     //   rotateobstacle[r] = glm::rotate((float)(obstacle_rotation[r]*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
       Matrices.model *= (translateobstacle[r] );
       MVP = VP * Matrices.model;
