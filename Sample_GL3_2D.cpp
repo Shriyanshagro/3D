@@ -206,7 +206,7 @@ float panz =0;
 int num_obs = 4;
 float obsx[51] = {0,0.5,1,0.2,.8};
 float obsz[51] = {0,0.5,1,0.8,0.1};
-int no_cam =3 ;
+int no_cam = 4 ;
 float camfrom[4] ;
 float camlook[4] ;
 int campos=0;
@@ -349,7 +349,7 @@ void reshapeWindow (int width, int height)
 VAO *triangle, *rectangle,*obstacle[50];
 
 // Creates the triangle object used in this sample code
-void createBot ()
+void createground ()
 {
   /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
 
@@ -506,7 +506,7 @@ void createBot ()
   triangle = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
-void createground ()
+void createbot ()
 {
   // GL3 accepts only Triangles. Quads are not supported static
   static const GLfloat vertex_buffer_data [] = {
@@ -815,7 +815,19 @@ void draw ()
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
   if(campos==0)
+    // tower view
   {
+      camfrom[1]= eyefrom[1]+panx ;
+      camfrom[2]= eyefrom[2];
+      camfrom[3] = eyefrom[3]+panz ;
+      camlook[1]= targetto[1] ;
+      camlook[2]= targetto[2];
+      camlook[3] = targetto[3];
+  }
+
+  else if(campos==1)
+  {
+    //   bot's eye
       camfrom[1]= botpos[1]+posx ;
       camfrom[2]= botpos[2];
       camfrom[3] = botpos[3] + posz;
@@ -823,14 +835,9 @@ void draw ()
       camlook[2]= botpos[2];
       camlook[3] = botpos[3] + posz -0.2f;
   }
-  else if(campos==1)
-  {
-      camfrom[1]= eyefrom[1]+panx ;
-      camfrom[2]= eyefrom[2];
-      camfrom[3] = eyefrom[3]+panz ;
-  }
   else if(campos==2)
   {
+    //   bot's head
       camfrom[1]= botpos[1]+posx ;
       camfrom[2]= botpos[2]+0.2f;
       camfrom[3] = botpos[3] + posz + 0.4f;
@@ -838,8 +845,19 @@ void draw ()
       camlook[2]= botpos[2];
       camlook[3] = botpos[3] + posz ;
   }
+  else if(campos==3)
+    // tower view
+  {
+      camfrom[1]= botpos[1] ;
+      camfrom[2]= botpos[2] + 1 ;
+      camfrom[3] =botpos[3] ;
+      camlook[1]= targetto[1] ;
+      camlook[2]= targetto[2];
+      camlook[3] = targetto[3];
+  }
 
-  Matrices.view = glm::lookAt(glm::vec3(camfrom[1]+panx,camfrom[2],camfrom[3]+panz), glm::vec3(targetto[1],targetto[2],targetto[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
+
+  Matrices.view = glm::lookAt(glm::vec3(camfrom[1],camfrom[2],camfrom[3]), glm::vec3(camlook[1],camlook[2],camlook[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
 
   // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
@@ -855,7 +873,7 @@ void draw ()
 
   /* Render your scene */
 
-  glm::mat4 translateTriangle = glm::translate (glm::vec3(0, 0.0f, 0.0f)); // glTranslatef
+  glm::mat4 translateTriangle = glm::translate (glm::vec3(0, -0.30f, 0.0f)); // glTranslatef
   glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
   glm::mat4 triangleTransform = translateTriangle * rotateTriangle;
   Matrices.model *= triangleTransform;
@@ -868,7 +886,7 @@ void draw ()
   draw3DObject(triangle);
 
   Matrices.model = glm::mat4(1.0f);
-
+  // bot
   glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1]+posx,botpos[2],botpos[3]+posz));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
@@ -990,7 +1008,7 @@ void addGLUTMenus ()
 void initGL (int width, int height)
 {
 	// Create the models
-	createBot (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+	createground (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
     createobstacle();
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -1007,7 +1025,7 @@ void initGL (int width, int height)
 	glEnable (GL_DEPTH_TEST);
 	glDepthFunc (GL_LEQUAL);
 
-	createground ();
+	createbot ();
 
 	cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
 	cout << "RENDERER: " << glGetString(GL_RENDERER) << endl;
