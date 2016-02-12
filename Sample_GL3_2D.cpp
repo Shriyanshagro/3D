@@ -206,6 +206,10 @@ float panz =0;
 int num_obs = 4;
 float obsx[51] = {0,0.5,1,0.2,.8};
 float obsz[51] = {0,0.5,1,0.8,0.1};
+int no_cam =3 ;
+float camfrom[4] ;
+float camlook[4] ;
+int campos=0;
 // float obstacle_rotation[51] ;
 
 /* Executed when a regular key is pressed */
@@ -304,7 +308,8 @@ void mouseClick (int button, int state, int x, int y)
     switch (button) {
         case GLUT_LEFT_BUTTON:
             if (state == GLUT_UP)
-                triangle_rot_dir *= -1;
+                campos++;
+                campos=campos%no_cam;
             break;
         case GLUT_RIGHT_BUTTON:
             if (state == GLUT_UP) {
@@ -344,7 +349,7 @@ void reshapeWindow (int width, int height)
 VAO *triangle, *rectangle,*obstacle[50];
 
 // Creates the triangle object used in this sample code
-void createTriangle ()
+void createBot ()
 {
   /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
 
@@ -501,7 +506,7 @@ void createTriangle ()
   triangle = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
-void createRectangle ()
+void createground ()
 {
   // GL3 accepts only Triangles. Quads are not supported static
   static const GLfloat vertex_buffer_data [] = {
@@ -809,7 +814,32 @@ void draw ()
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
-  Matrices.view = glm::lookAt(glm::vec3(eyefrom[1]+panx,eyefrom[2],eyefrom[3]+panz), glm::vec3(targetto[1],targetto[2],targetto[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
+  if(campos==0)
+  {
+      camfrom[1]= botpos[1]+posx ;
+      camfrom[2]= botpos[2];
+      camfrom[3] = botpos[3] + posz;
+      camlook[1]= botpos[1]+posx ;
+      camlook[2]= botpos[2];
+      camlook[3] = botpos[3] + posz -0.2f;
+  }
+  else if(campos==1)
+  {
+      camfrom[1]= eyefrom[1]+panx ;
+      camfrom[2]= eyefrom[2];
+      camfrom[3] = eyefrom[3]+panz ;
+  }
+  else if(campos==2)
+  {
+      camfrom[1]= botpos[1]+posx ;
+      camfrom[2]= botpos[2]+0.2f;
+      camfrom[3] = botpos[3] + posz + 0.4f;
+      camlook[1]= botpos[1]+posx ;
+      camlook[2]= botpos[2];
+      camlook[3] = botpos[3] + posz ;
+  }
+
+  Matrices.view = glm::lookAt(glm::vec3(camfrom[1]+panx,camfrom[2],camfrom[3]+panz), glm::vec3(targetto[1],targetto[2],targetto[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
 
   // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
@@ -960,7 +990,7 @@ void addGLUTMenus ()
 void initGL (int width, int height)
 {
 	// Create the models
-	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+	createBot (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
     createobstacle();
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -977,7 +1007,7 @@ void initGL (int width, int height)
 	glEnable (GL_DEPTH_TEST);
 	glDepthFunc (GL_LEQUAL);
 
-	createRectangle ();
+	createground ();
 
 	cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
 	cout << "RENDERER: " << glGetString(GL_RENDERER) << endl;
