@@ -210,6 +210,8 @@ int no_cam = 4 ;
 float camfrom[4] ;
 float camlook[4] ;
 int campos=0;
+double mov[5] ;
+double dir[5] ;
 // float obstacle_rotation[51] ;
 
 /* Executed when a regular key is pressed */
@@ -781,8 +783,21 @@ void createobstacle ()
   };
 
   // create3DObject creates and returns a handle to a VAO that can be used later
+  srand((unsigned)time(0));
   for(int r=1;r<=num_obs;r++)
+  {
       obstacle[r] = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
+      mov[r] = rand()%5;
+      mov[r] /=100;
+      dir[r] = rand()%2;
+      if(dir[r]==0)
+      {
+          dir[r]++;
+      }
+      else{
+          dir[r]*=-1;
+      }
+  }
 }
 
 void fall_down(){
@@ -815,8 +830,8 @@ void draw ()
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
   if(campos==0)
-    // tower view
   {
+    // tower view
       camfrom[1]= eyefrom[1]+panx ;
       camfrom[2]= eyefrom[2];
       camfrom[3] = eyefrom[3]+panz ;
@@ -846,8 +861,8 @@ void draw ()
       camlook[3] = botpos[3] + posz ;
   }
   else if(campos==3)
-    // tower view
   {
+    // tower view
       camfrom[1]= botpos[1] ;
       camfrom[2]= botpos[2] + 1 ;
       camfrom[3] =botpos[3] ;
@@ -873,7 +888,7 @@ void draw ()
 
   /* Render your scene */
 
-  glm::mat4 translateTriangle = glm::translate (glm::vec3(0, -0.30f, 0.0f)); // glTranslatef
+  glm::mat4 translateTriangle = glm::translate (glm::vec3(0, -0.03f, 0.0f)); // glTranslatef
   glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
   glm::mat4 triangleTransform = translateTriangle * rotateTriangle;
   Matrices.model *= triangleTransform;
@@ -887,7 +902,7 @@ void draw ()
 
   Matrices.model = glm::mat4(1.0f);
   // bot
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1]+posx,botpos[2],botpos[3]+posz));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1]+posx,botpos[2]-0.09f,botpos[3]+posz));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
@@ -902,7 +917,11 @@ void draw ()
   {
       Matrices.model = glm::mat4(1.0f);
     //   obstacle_rotation[r]=0.0f;
-      translateobstacle[r] = glm::translate (glm::vec3(botpos[1]-obsx[r],botpos[2]-0.12f,botpos[3]-obsz[r]));        // glTranslatef
+    if(mov[r]>0.05 || mov[r]<-0.05){
+        dir[r]*=-1;
+    }
+    mov[r]+=0.001*dir[r];
+      translateobstacle[r] = glm::translate (glm::vec3(botpos[1]-obsx[r],botpos[2]-0.12f+mov[r],botpos[3]-obsz[r]));        // glTranslatef
     //   rotateobstacle[r] = glm::rotate((float)(obstacle_rotation[r]*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
       Matrices.model *= (translateobstacle[r] );
       MVP = VP * Matrices.model;
