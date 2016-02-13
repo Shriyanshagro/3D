@@ -186,12 +186,12 @@ void draw3DObject (struct VAO* vao)
     glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
 }
 
-/**************************
- * Customizable functions *
- **************************/
+
+ // all variables defined here
 float camera_rotation_angle = 90;
-float rectangle_rotation = 0;
+float rectangle_rotation = 180;
 float triangle_rotation = 0;
+float obstacle_rotation[51] ;
 float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
 bool triangle_rot_status = false;
@@ -212,7 +212,20 @@ float camlook[4] ;
 int campos=0;
 double mov[51] ;
 float dir[51] ;
-// float obstacle_rotation[51] ;
+int visibility[51];
+int appear[51] ;
+float mouposx;
+float mouposy ;
+float mousez;
+double lastx = 0;
+double lasty =0 ;
+double theta;
+double phi=0;
+double zoom =0 ;
+int appear_time = 1500;
+
+
+void reshapeWindow(int width,int height);
 
 /* Executed when a regular key is pressed */
 void keyboardDown (unsigned char key, int x, int y)
@@ -309,15 +322,29 @@ void mouseClick (int button, int state, int x, int y)
 {
     switch (button) {
         case GLUT_LEFT_BUTTON:
-            if (state == GLUT_UP)
+            if (state == GLUT_UP){
                 campos++;
                 campos=campos%no_cam;
+            }
             break;
         case GLUT_RIGHT_BUTTON:
             if (state == GLUT_UP) {
-                rectangle_rot_dir *= -1;
             }
             break;
+        case 3:
+            if(zoom<=300)
+            {
+                zoom+=20;
+                reshapeWindow(600,600);
+            }
+        break;
+        case 4:
+            if(zoom>=-300)
+            {
+                zoom-= 20;
+                reshapeWindow(600,600);
+            }
+        break;
         default:
             break;
     }
@@ -326,6 +353,15 @@ void mouseClick (int button, int state, int x, int y)
 /* Executed when the mouse moves to position ('x', 'y') */
 void mouseMotion (int x, int y)
 {
+                // cout<<x<<" "<<y<<endl;
+    theta += (lastx-x) / 100.0;
+   phi += (lasty-y) / 50.0;
+   lastx = x/1000;
+   lasty = y/1000;
+   mouposx = x ;
+    mouposx /=1000;
+    mouposy = y;
+    mouposy /=1000;
 
 }
 
@@ -342,8 +378,9 @@ void reshapeWindow (int width, int height)
 	// set the projection matrix as perspective/ortho
 	// Store the projection matrix in a variable for future use
 
+    // Matrices.projection = glm::ortho(x, y, x, y, 0.1f, 500.0f);
     // Perspective projection for 3D views
-    Matrices.projection = glm::perspective (fov, (GLfloat) width / (GLfloat) height, 0.1f, 500.0f);
+    Matrices.projection = glm::perspective (fov, (GLfloat) (width - zoom) / (GLfloat) (height +zoom ) , 0.1f, 500.0f);
 
     // Ortho projection for 2D views
     // Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
@@ -785,12 +822,15 @@ void createobstacle ()
 
   // create3DObject creates and returns a handle to a VAO that can be used later
   srand((unsigned)time(0));
+  int temp,temp2,temp3;
   for(int r=1;r<=num_obs;r++)
   {
       obstacle[r] = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
       mov[r] = rand()%5;
       mov[r] /=100;
-      float temp = rand()%2;
+      temp = rand()%2;
+      temp2 = rand()%num_obs;
+      temp3 = rand()%appear_time;
       if(temp==0)
       {
           temp++;
@@ -805,16 +845,20 @@ void createobstacle ()
       obsz[r] /=10;
       obsz[r] *=temp;
       dir[r] = temp;
+      appear[r] = temp2;
+      visibility[r]=temp3;
   }
 }
 
 void fall_down(){
     for(int r=1;r<=num_obs;r++){
-        if(posx<=(-obsx[r]+0.05f) && posx>=(-obsx[r]-0.05f) && posz<=(-obsz[r]+0.05) && posz>=(-obsz[r]-0.05)) {
+        if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(-obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) && visibility[r]<(appear_time*2/3)) {
             cout<<"You Lose!!"<<endl;
             exit(0);
         }
     }
+    // botpos[1]+posx,botpos[2]-0.09f,botpos[3]+posz
+    // obsx[r],botpos[2]-0.12f+mov[r],obsz[r]
 }
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
@@ -857,6 +901,7 @@ void draw ()
       camlook[1]= botpos[1]+posx ;
       camlook[2]= botpos[2];
       camlook[3] = botpos[3] + posz -0.2f;
+      rectangle_rotation = theta;
   }
   else if(campos==2)
   {
@@ -867,6 +912,7 @@ void draw ()
       camlook[1]= botpos[1]+posx ;
       camlook[2]= botpos[2];
       camlook[3] = botpos[3] + posz ;
+      rectangle_rotation = theta;
   }
   else if(campos==3)
   {
@@ -879,10 +925,10 @@ void draw ()
       camlook[3] = targetto[3];
   }
 
+  // TO-DO = camera roattion with bot rotation , for man's eye
+  Matrices.view = glm::lookAt(glm::vec3(camfrom[1],camfrom[2],camfrom[3]), glm::vec3(mouposx,camlook[2],mouposy), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
 
-  Matrices.view = glm::lookAt(glm::vec3(camfrom[1],camfrom[2],camfrom[3]), glm::vec3(camlook[1],camlook[2],camlook[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
-
-  // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
+  // Compute ViewProject matrix as view/camera might not beappear changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
   glm::mat4 VP = Matrices.projection * Matrices.view;
 
@@ -911,7 +957,7 @@ void draw ()
   Matrices.model = glm::mat4(1.0f);
   // bot
   glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1]+posx,botpos[2]-0.09f,botpos[3]+posz));        // glTranslatef
-  glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,1,0)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -924,11 +970,19 @@ void draw ()
   for(int r=1;r<=num_obs;r++)
   {
       Matrices.model = glm::mat4(1.0f);
-    //   obstacle_rotation[r]=0.0f;
-    if(mov[r]>0.05 || mov[r]<-0.05){
+
+    //   some tiles appear disappear
+    if(appear[r]%(num_obs/2)==0){
+        visibility[r]++;
+        if(visibility[r]>appear_time)
+            visibility[r]=1;
+    }
+    else{
+    if(mov[r]>0.05 || mov[r]<-0.05 ){
         dir[r]*=-1;
     }
-    mov[r]+=0.001*dir[r];
+        mov[r]+=0.001*dir[r];
+    }
       translateobstacle[r] = glm::translate (glm::vec3(obsx[r],botpos[2]-0.12f+mov[r],obsz[r]));        // glTranslatef
     //   rotateobstacle[r] = glm::rotate((float)(obstacle_rotation[r]*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
       Matrices.model *= (translateobstacle[r] );
@@ -936,6 +990,7 @@ void draw ()
       glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
       // draw3DObject draws the VAO given to it using current MVP matrix
+      if(visibility[r]<(appear_time*2/3))
       draw3DObject(obstacle[r]);
 
     //   obstacle_rotation[r] = obstacle_rotation[r] + obstacle_rot_dir[r]*obstacle_rot_status[r];
@@ -994,7 +1049,7 @@ void initGLUT (int& argc, char** argv, int width, int height)
     glutSpecialUpFunc (keyboardSpecialUp);
 
     glutMouseFunc (mouseClick);
-    glutMotionFunc (mouseMotion);
+    glutPassiveMotionFunc (mouseMotion);
 
     glutReshapeFunc (reshapeWindow);
 
