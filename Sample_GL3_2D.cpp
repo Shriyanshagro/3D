@@ -198,7 +198,7 @@ bool triangle_rot_status = false;
 bool rectangle_rot_status = false;
 float eyefrom[4] = {0,1.2f,1.4f,1.2f} ;
 float targetto[4] = {0,0,0,0};
-float botpos[4] = {0,0.97f,1.1f,0.97f};
+float botpos[4] = {0,-0.97f,1.1f,-0.97f};
 float posz=0;
 float posx=0;
 float panx =0 ;
@@ -237,21 +237,23 @@ void keyboardDown (unsigned char key, int x, int y)
             exit (0);
         case 'd':
         case 'D':
-        if(posx<0)
-            posx+=0.05f;
+        if(posx>0.0f)
+            posx-=0.05f;
         break;
         case 'a':
         case 'A':
-            posx-=0.05f;
+            if(posx<1.95f)
+                posx+=0.05f;
         break;
         case 'w':
         case 'W':
-            posz-=0.05f;
+            if(posz<1.95f)
+                posz+=0.05f;
         break;
         case 's':
         case 'S':
-        if(posz<0)
-            posz+=0.05f;
+        if(posz>0.0f)
+            posz-=0.05f;
         break;
         default:
             break;
@@ -850,9 +852,57 @@ void createobstacle ()
   }
 }
 
+void cameraposition(){
+    if(campos==0)
+    {
+      // tower view
+        camfrom[1]= eyefrom[1]+panx ;
+        camfrom[2]= eyefrom[2];
+        camfrom[3] = eyefrom[3]+panz ;
+        camlook[1]= targetto[1] ;
+        camlook[2]= targetto[2];
+        camlook[3] = targetto[3];
+    }
+
+    else if(campos==1)
+    {
+      //   bot's eye
+        camfrom[1]= botpos[1]+posx ;
+        camfrom[2]= botpos[2];
+        camfrom[3] = botpos[3] + posz;
+        camlook[1]= botpos[1]+posx ;
+        camlook[2]= botpos[2];
+        camlook[3] = botpos[3] + posz -0.2f;
+        rectangle_rotation = theta;
+    }
+    else if(campos==2)
+    {
+      //   bot's head
+        camfrom[1]= botpos[1]+posx ;
+        camfrom[2]= botpos[2]+0.2f;
+        camfrom[3] = botpos[3] + posz + 0.4f;
+        camlook[1]= botpos[1]+posx ;
+        camlook[2]= botpos[2];
+        camlook[3] = botpos[3] + posz ;
+        rectangle_rotation = theta;
+    }
+    else if(campos==3)
+    {
+      // tower view
+        camfrom[1]= botpos[1] ;
+        camfrom[2]= botpos[2] + 1 ;
+        camfrom[3] =botpos[3] ;
+        camlook[1]= targetto[1] ;
+        camlook[2]= targetto[2];
+        camlook[3] = targetto[3];
+    }
+
+}
+
 void fall_down(){
     for(int r=1;r<=num_obs;r++){
-        if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(-obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) && visibility[r]<(appear_time*2/3)) {
+        if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) &&
+            visibility[r]<appear_time*2/3) {
             cout<<"You Lose!!"<<endl;
             exit(0);
         }
@@ -881,49 +931,8 @@ void draw ()
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
-  if(campos==0)
-  {
-    // tower view
-      camfrom[1]= eyefrom[1]+panx ;
-      camfrom[2]= eyefrom[2];
-      camfrom[3] = eyefrom[3]+panz ;
-      camlook[1]= targetto[1] ;
-      camlook[2]= targetto[2];
-      camlook[3] = targetto[3];
-  }
 
-  else if(campos==1)
-  {
-    //   bot's eye
-      camfrom[1]= botpos[1]+posx ;
-      camfrom[2]= botpos[2];
-      camfrom[3] = botpos[3] + posz;
-      camlook[1]= botpos[1]+posx ;
-      camlook[2]= botpos[2];
-      camlook[3] = botpos[3] + posz -0.2f;
-      rectangle_rotation = theta;
-  }
-  else if(campos==2)
-  {
-    //   bot's head
-      camfrom[1]= botpos[1]+posx ;
-      camfrom[2]= botpos[2]+0.2f;
-      camfrom[3] = botpos[3] + posz + 0.4f;
-      camlook[1]= botpos[1]+posx ;
-      camlook[2]= botpos[2];
-      camlook[3] = botpos[3] + posz ;
-      rectangle_rotation = theta;
-  }
-  else if(campos==3)
-  {
-    // tower view
-      camfrom[1]= botpos[1] ;
-      camfrom[2]= botpos[2] + 1 ;
-      camfrom[3] =botpos[3] ;
-      camlook[1]= targetto[1] ;
-      camlook[2]= targetto[2];
-      camlook[3] = targetto[3];
-  }
+  cameraposition();
 
   // TO-DO = camera roattion with bot rotation , for man's eye
   Matrices.view = glm::lookAt(glm::vec3(camfrom[1],camfrom[2],camfrom[3]), glm::vec3(mouposx,camlook[2],mouposy), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
@@ -944,7 +953,7 @@ void draw ()
 
   glm::mat4 translateTriangle = glm::translate (glm::vec3(0, -0.03f, 0.0f)); // glTranslatef
   glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
-  glm::mat4 triangleTransform = translateTriangle * rotateTriangle;
+  glm::mat4 triangleTransform = rotateTriangle * translateTriangle;
   Matrices.model *= triangleTransform;
   MVP = VP * Matrices.model; // MVP = p * V * M
 
@@ -956,9 +965,12 @@ void draw ()
 
   Matrices.model = glm::mat4(1.0f);
   // bot
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1]+posx,botpos[2]-0.09f,botpos[3]+posz));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1],botpos[2]-0.09f,botpos[3]));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,1,0)); // rotate about vector (-1,1,1)
-  Matrices.model *= (translateRectangle * rotateRectangle);
+  Matrices.model *= ( rotateRectangle *   translateRectangle  );
+  glm::mat4 translateRectangle2 = glm::translate (glm::vec3(posx,0,posz));        // glTranslatef
+  // glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,1,0)); // rotate about vector (-1,1,1)
+  Matrices.model *= (  translateRectangle2 );
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
@@ -978,14 +990,14 @@ void draw ()
             visibility[r]=1;
     }
     else{
-    if(mov[r]>0.05 || mov[r]<-0.05 ){
+    if(mov[r]>0.05 || mov[r]<-0.1 ){
         dir[r]*=-1;
     }
         mov[r]+=0.001*dir[r];
     }
       translateobstacle[r] = glm::translate (glm::vec3(obsx[r],botpos[2]-0.12f+mov[r],obsz[r]));        // glTranslatef
-    //   rotateobstacle[r] = glm::rotate((float)(obstacle_rotation[r]*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-      Matrices.model *= (translateobstacle[r] );
+      rotateobstacle[r] = glm::rotate((float)(180*M_PI/180.0f), glm::vec3(0,1,0)); // rotate about vector (-1,1,1)
+      Matrices.model *= (rotateobstacle[r]*translateobstacle[r] );
       MVP = VP * Matrices.model;
       glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
