@@ -1122,7 +1122,7 @@ void check_health(){
     {
             jump_allow = false;
             health-=1;
-            cout<<"Don't try to jump very deep, you got injury."<<endl;
+            cout<<"Don't try to jump very high, you may get injury."<<endl;
             cout<<"Health = "<<health<<endl;
             if(health<0)
             {
@@ -1379,10 +1379,9 @@ int main (int argc, char** argv)
 	int height = 600;
 
     initGLUT (argc, argv, width, height);
-    // FILE * pFile;
-    // pFile = fopen ( "car_x.wav" , "rb" );
-    // if(!buffer1.loadFromFile("Helicopter.wav"))
-    //     return -1;
+
+    if(!buffer1.loadFromFile("Helicopter.wav"))
+        return -1;
     sound1.setBuffer(buffer1);
 
     addGLUTMenus ();
