@@ -232,7 +232,7 @@ bool bounce = false;
 bool helicopter = false;
 float helcamx =0 ;
 float helcamy =0 ;
-
+bool flash = false;
 void reshapeWindow(int width,int height);
 
 /* Executed when a regular key is pressed */
@@ -282,6 +282,10 @@ void keyboardDown (unsigned char key, int x, int y)
             else{
                 helcamy +=0.05f;
             }
+        break;
+        case 'f':
+        case 'F':
+            flash = !flash;
         break;
         case 32:
         if(helicopter == false){
@@ -345,7 +349,6 @@ void keyboardSpecialDown (int key, int x, int y)
 /* Executed when a special key is released */
 void keyboardSpecialUp (int key, int x, int y)
 {
-
 }
 
 /* Executed when a mouse button 'button' is put into state 'state'
@@ -425,9 +428,64 @@ void reshapeWindow (int width, int height)
     // Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle,*obstacle[50];
+VAO *triangle, *rectangle,*obstacle[50],*canon;
 
-// Creates the triangle object used in this sample code
+int i=0;
+GLfloat vertex_buffer_data [500] ;
+GLfloat color_buffer_data [500] ;
+
+void add(GLdouble x,GLdouble y)
+{
+    vertex_buffer_data[i]=x;
+    color_buffer_data[i++]=1  ;
+    vertex_buffer_data[i]=y;
+    color_buffer_data[i++]=1;
+    vertex_buffer_data[i]=0;
+    color_buffer_data[i++]=1;
+
+}
+
+void createcanon (GLdouble centrex,GLdouble centrey)
+{
+  /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
+    const double TWO_PI = 6.2831853;
+    GLdouble hexTheta,x,y,radius_canon=.03,previousx,previousy;
+    // adds point to the vertex_buffer array
+
+    hexTheta = TWO_PI * 0/20;
+    x = centrex + radius_canon * cos(hexTheta);
+    y = centrey + radius_canon * sin(hexTheta);
+    add(0,0);
+    add(x,y);
+    hexTheta = TWO_PI * 1/20;
+    x = centrex + radius_canon * cos(hexTheta);
+    y = centrey + radius_canon * sin(hexTheta);
+    add(x,y);
+    previousy = y;
+    previousx = x;
+
+    int j;
+    // building many triangles to form one circle
+    for(j=2;j<=20;j++)
+    {
+        hexTheta = TWO_PI * j/20;
+        // defining the new vertices
+        x = centrex + radius_canon * cos(hexTheta);
+        y = centrey + radius_canon * sin(hexTheta);
+        // assigining vertices to new triangle
+        add(0,0);
+        add(previousx,previousy);
+        add(x,y);
+        previousy = y;
+        previousx = x;
+    }
+
+  // create3DObject creates and returns a handle to a VAO that can be used later
+  canon = create3DObject(GL_TRIANGLES, 180, vertex_buffer_data, color_buffer_data, GL_FILL);
+  i=0;
+}
+
+
 void createground ()
 {
   /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
@@ -1094,6 +1152,20 @@ void draw ()
 
   }
 
+  // canon
+  Matrices.model = glm::mat4(1.0f);
+
+  glm::mat4 translatecanon = glm::translate (glm::vec3(botpos[1]+posx,botpos[2]-0.09f+0.04f+jump,botpos[3]+posz));        // glTranslatef
+  glm::mat4 rotatecanon = glm::rotate((float)((180)*M_PI/180.0f), glm::vec3(0,1,0)); // rotate about vector (0,0,1)
+  glm::mat4 rotatecanon2 = glm::rotate((float)((90)*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (0,0,1)
+  glm::mat4 rotatecanon3 = glm::rotate((float)((90)*M_PI/180.0f), glm::vec3(0,1,0)); // rotate about vector (0,0,1)
+  Matrices.model *= (rotatecanon * translatecanon * rotatecanon * rotatecanon2 * rotatecanon3);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+  // draw3DObject draws the VAO given to it using current MVP matrix
+  if(flash==true)
+  draw3DObject(canon);
 
   // Swap the frame buffers
   glutSwapBuffers ();
@@ -1188,6 +1260,8 @@ void initGL (int width, int height)
 	// Create the models
 	createground (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
     createobstacle();
+    createcanon (0.2f,0); // pointed at -3   .5,-3
+
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
 	// Get a handle for our "MVP" uniform
