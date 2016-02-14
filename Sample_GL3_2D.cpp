@@ -223,7 +223,12 @@ double theta;
 double phi=0;
 double zoom =0 ;
 int appear_time = 1500;
-
+float uy=0;
+float vy=0;
+float gravity=-10;
+float tame=0;
+float jump =0;
+bool bounce = false;
 
 void reshapeWindow(int width,int height);
 
@@ -254,6 +259,11 @@ void keyboardDown (unsigned char key, int x, int y)
         case 'S':
         if(posz>0.0f)
             posz-=0.05f;
+        break;
+        case 32:
+            uy = 15;
+            tame =0 ;
+            bounce = true;
         break;
         default:
             break;
@@ -902,16 +912,41 @@ void cameraposition(){
 void fall_down(){
     for(int r=1;r<=num_obs;r++){
         if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) &&
-            visibility[r]<appear_time*2/3) {
+            visibility[r]<appear_time*2/3 && (botpos[2]-0.09f+jump)-(botpos[2]-0.12f+mov[r])<0.005) {
             cout<<"You Lose!!"<<endl;
             exit(0);
         }
     }
-    // botpos[1]+posx,botpos[2]-0.09f,botpos[3]+posz
-    // obsx[r],botpos[2]-0.12f+mov[r],obsz[r]
 }
-/* Render the scene with openGL */
-/* Edit this function according to your assignment */
+
+void check_ground(){
+        if ((jump*2)<-0.01f){ // detect ground
+            bounce=false;
+            return ;
+        }
+        for(int r=1;r<=num_obs;r++){
+            if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) && visibility[r]<appear_time*2/3) {
+                cout<<"got it"<<endl;
+                // exit(0);
+                jump+=mov[r];
+                bounce=false;
+            }
+        }
+}
+
+void jump_func(){
+
+    if(bounce == false)
+        return;
+
+    vy =uy + gravity*tame;
+    jump = uy*tame + gravity*tame*tame/2;
+    uy=vy;
+    jump /=2;
+
+}
+
+
 void draw ()
 {
   // clear the color and depth in the frame buffer
@@ -963,9 +998,14 @@ void draw ()
   // draw3DObject draws the VAO given to it using current MVP matrix
   draw3DObject(triangle);
 
+  jump_func();
+  check_ground();
+  fall_down();
+
+
   Matrices.model = glm::mat4(1.0f);
   // bot
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1],botpos[2]-0.09f,botpos[3]));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(botpos[1],botpos[2]-0.09f+jump,botpos[3]));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,1,0)); // rotate about vector (-1,1,1)
   Matrices.model *= ( rotateRectangle *   translateRectangle  );
   glm::mat4 translateRectangle2 = glm::translate (glm::vec3(posx,0,posz));        // glTranslatef
@@ -975,6 +1015,9 @@ void draw ()
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
+
+
+  tame += 0.001f;
   draw3DObject(rectangle);
 
 
@@ -990,7 +1033,7 @@ void draw ()
             visibility[r]=1;
     }
     else{
-    if(mov[r]>0.05 || mov[r]<-0.1 ){
+    if(mov[r]>0.05 || mov[r]<-0.06 ){
         dir[r]*=-1;
     }
         mov[r]+=0.001*dir[r];
@@ -1009,7 +1052,6 @@ void draw ()
 
   }
 
-  fall_down();
 
   // Swap the frame buffers
   glutSwapBuffers ();
