@@ -188,7 +188,7 @@ void draw3DObject (struct VAO* vao)
 
 
  // all variables defined here
-float camera_rotation_angle = 90;
+float camera_rotation_angle = 0;
 float rectangle_rotation = 180;
 float triangle_rotation = 0;
 float obstacle_rotation[51] ;
@@ -206,7 +206,7 @@ float panz =0;
 int num_obs = 6;
 float obsx[51];
 float obsz[51] ;
-int no_cam = 4 ;
+int no_cam = 5 ;
 float camfrom[4] ;
 float camlook[4] ;
 int campos=0;
@@ -229,6 +229,9 @@ float gravity=-10;
 float tame=0;
 float jump =0;
 bool bounce = false;
+bool helicopter = false;
+float helcamx =0 ;
+float helcamy =0 ;
 
 void reshapeWindow(int width,int height);
 
@@ -242,52 +245,69 @@ void keyboardDown (unsigned char key, int x, int y)
             exit (0);
         case 'd':
         case 'D':
-        if(posx>0.0f)
-            posx-=0.05f;
+        if(helicopter == false){
+            if(posx>0.0f)
+                posx-=0.05f;
+        }
+        else{
+            helcamx+=0.05f;
+        }
         break;
         case 'a':
         case 'A':
+        if(helicopter == false){
             if(posx<1.95f)
                 posx+=0.05f;
+        }
+        else{
+            helcamx -=0.05f;
+        }
         break;
         case 'w':
         case 'W':
+        if(helicopter == false){
             if(posz<1.95f)
                 posz+=0.05f;
+        }
+        else{
+            helcamy -=0.05f;
+        }
         break;
         case 's':
         case 'S':
-        if(posz>0.0f)
-            posz-=0.05f;
+            if(helicopter == false){
+                if(posz>0.0f)
+                    posz-=0.05f;
+            }
+            else{
+                helcamy +=0.05f;
+            }
         break;
         case 32:
+        if(helicopter == false){
             uy = 15;
             tame =0 ;
             bounce = true;
+        }
+        break;
+        case 13:
+            campos++;
+            campos=campos%no_cam;
+            if (campos==4){
+                helicopter = true;
+                helcamx=helcamy=0;
+            }
+            else
+                helicopter = false;
         break;
         default:
-            break;
+        break;
     }
 }
 
 /* Executed when a regular key is released */
 void keyboardUp (unsigned char key, int x, int y)
 {
-    switch (key) {
-        case 'c':
-        case 'C':
-            rectangle_rot_status = !rectangle_rot_status;
-            break;
-        case 'p':
-        case 'P':
-            triangle_rot_status = !triangle_rot_status;
-            break;
-        case 'x':
-            // do something
-            break;
-        default:
-            break;
-    }
 }
 
 /* Executed when a special key is pressed */
@@ -325,6 +345,7 @@ void keyboardSpecialDown (int key, int x, int y)
 /* Executed when a special key is released */
 void keyboardSpecialUp (int key, int x, int y)
 {
+
 }
 
 /* Executed when a mouse button 'button' is put into state 'state'
@@ -337,6 +358,12 @@ void mouseClick (int button, int state, int x, int y)
             if (state == GLUT_UP){
                 campos++;
                 campos=campos%no_cam;
+                if (campos==4){
+                    helicopter = true;
+                    helcamx=helcamy=0;
+                }
+                else
+                    helicopter = false;
             }
             break;
         case GLUT_RIGHT_BUTTON:
@@ -862,53 +889,6 @@ void createobstacle ()
   }
 }
 
-void cameraposition(){
-    if(campos==0)
-    {
-      // tower view
-        camfrom[1]= eyefrom[1]+panx ;
-        camfrom[2]= eyefrom[2];
-        camfrom[3] = eyefrom[3]+panz ;
-        camlook[1]= targetto[1] ;
-        camlook[2]= targetto[2];
-        camlook[3] = targetto[3];
-    }
-
-    else if(campos==1)
-    {
-      //   bot's eye
-        camfrom[1]= botpos[1]+posx ;
-        camfrom[2]= botpos[2];
-        camfrom[3] = botpos[3] + posz;
-        camlook[1]= botpos[1]+posx ;
-        camlook[2]= botpos[2];
-        camlook[3] = botpos[3] + posz -0.2f;
-        rectangle_rotation = theta;
-    }
-    else if(campos==2)
-    {
-      //   bot's head
-        camfrom[1]= botpos[1]+posx ;
-        camfrom[2]= botpos[2]+0.2f;
-        camfrom[3] = botpos[3] + posz + 0.4f;
-        camlook[1]= botpos[1]+posx ;
-        camlook[2]= botpos[2];
-        camlook[3] = botpos[3] + posz ;
-        rectangle_rotation = theta;
-    }
-    else if(campos==3)
-    {
-      // tower view
-        camfrom[1]= botpos[1] ;
-        camfrom[2]= botpos[2] + 1 ;
-        camfrom[3] =botpos[3] ;
-        camlook[1]= targetto[1] ;
-        camlook[2]= targetto[2];
-        camlook[3] = targetto[3];
-    }
-
-}
-
 void fall_down(){
     for(int r=1;r<=num_obs;r++){
         if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) &&
@@ -946,6 +926,68 @@ void jump_func(){
 
 }
 
+void cameraposition(){
+    if(campos==0)
+    {
+      // tower view
+        camfrom[1]= eyefrom[1]-panx ;
+        camfrom[2]= eyefrom[2];
+        camfrom[3] = eyefrom[3]-panz ;
+        camlook[1]= mouposx ;
+        camlook[2]= targetto[2];
+        camlook[3] = mouposy;
+    }
+
+    else if(campos==1)
+    {
+      //   bot's eye
+        camfrom[1]= botpos[1]*-1 + posx*-1 +0.03f;
+        camfrom[2]= botpos[2]+0.08f;
+        camfrom[3] = botpos[3]*-1 + posz*-1 +0.03f;
+        camlook[1]= botpos[1]+posx +0.2f +mouposx;
+        camlook[2]= botpos[2]+0.1;
+        camlook[3] = botpos[3] + posz +0.2f +mouposy;
+        // rectangle_rotation = theta;
+    }
+    else if(campos==2)
+    {
+      //   bot's head
+        camfrom[1]= botpos[1]*-1+posx*-1 -0.5f;
+        camfrom[2]= botpos[2]+0.2f;
+        camfrom[3] = botpos[3]*-1 + posz*-1 - 0.5f;
+        camlook[1]= botpos[1]*-1+posx + 0.2 +mouposx;
+        camlook[2]= botpos[2]*-1 +0.2;
+        camlook[3] = botpos[3]*-1 + posz +0.2 + mouposy;
+        // rectangle_rotation = theta;
+        // camlook[1]= targetto[1]*-1 ;
+        // camlook[2]= targetto[2];
+        // camlook[3] = targetto[3]*-1;
+    }
+    else if(campos==3)
+    {
+      // top view
+        camfrom[1]= botpos[1]*-1 ;
+        camfrom[2]= botpos[2] + 1 ;
+        camfrom[3] =botpos[3]*-1 ;
+        camlook[1]= mouposx ;
+        camlook[2]= targetto[2];
+        camlook[3] = mouposy;
+    }
+
+    else if(campos==4)
+    {
+      // helicopter view
+      helicopter = true;
+      camfrom[1]= eyefrom[1]-panx + helcamx ;
+      camfrom[2]= eyefrom[2] ;
+      camfrom[3] = eyefrom[3]-panz + helcamy;
+      camlook[1]= mouposx + helcamx;
+      camlook[2]= targetto[2];
+      camlook[3] = mouposy + helcamy;
+    }
+
+}
+
 
 void draw ()
 {
@@ -970,7 +1012,7 @@ void draw ()
   cameraposition();
 
   // TO-DO = camera roattion with bot rotation , for man's eye
-  Matrices.view = glm::lookAt(glm::vec3(camfrom[1],camfrom[2],camfrom[3]), glm::vec3(mouposx,camlook[2],mouposy), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
+  Matrices.view = glm::lookAt(glm::vec3(camfrom[1],camfrom[2],camfrom[3]), glm::vec3(camlook[1],camlook[2],camlook[3]), glm::vec3(0,1,0)); // Fixed camera for 2D (ortho) in XY plane
 
   // Compute ViewProject matrix as view/camera might not beappear changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
