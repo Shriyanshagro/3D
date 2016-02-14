@@ -319,27 +319,27 @@ void keyboardSpecialDown (int key, int x, int y)
 {
     switch(key){
             case GLUT_KEY_UP:
+                panx+=0.1f;
                 // if(panx<=1)
                 // {
-                    panx-=0.1f;
                 // }
             break;
             case GLUT_KEY_DOWN:
             // if(panx>=-1)
             // {
-                panx+=0.1f;
+                    panx-=0.1f;
             // }
             break;
             case GLUT_KEY_RIGHT:
                 // if(panz<=35)
+                    panz+=0.1f;
                 // {
-                    panz-=0.1f;
                 // }
             break;
             case GLUT_KEY_LEFT:
                 // if(panz>=-35)
                 // {
-                    panz+=0.1f;
+                    panz-=0.1f;
                 // }
             break;
 
@@ -964,7 +964,7 @@ void check_ground(){
         }
         for(int r=1;r<=num_obs;r++){
             if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) && visibility[r]<appear_time*2/3) {
-                cout<<"got it"<<endl;
+                // cout<<"got it"<<endl;
                 // exit(0);
                 jump+=mov[r];
                 bounce=false;
