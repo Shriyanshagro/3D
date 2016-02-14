@@ -10,7 +10,7 @@ Rules and controls:
         run the file sample2D in terminal , just by typing ./sample2D in terminal.
 
     To compile the code , run
-        g++ -o sample2D Sample_GL3_2D.cpp -lGL -lGLU -lGLEW -lglut -lm
+        sudo g++ -o sample2D Sample_GL3_2D.cpp -lGL -lGLU -lGLEW -lglut -lm -lsfml-audio
 
     Controls:
 

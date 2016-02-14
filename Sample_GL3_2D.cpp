@@ -11,6 +11,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <SFML/Audio.hpp>
+
+ #pragma comment(lib, "irrKlang.lib") // link with irrKlang.dll
 
 using namespace std;
 
@@ -33,6 +36,9 @@ struct GLMatrices {
 } Matrices;
 
 GLuint programID;
+
+sf::SoundBuffer buffer1;
+sf::Sound sound1;
 
 /* Function to load Shaders - Use it as it is */
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -225,6 +231,9 @@ double zoom =0 ;
 int appear_time = 1500;
 float uy=0;
 float vy=0;
+float jumpx =0.005f;
+float jumpz =0.005f;
+int dir_jump=1;
 float gravity=-10;
 float tame=0;
 float jump =0;
@@ -233,6 +242,9 @@ bool helicopter = false;
 float helcamx =0 ;
 float helcamy =0 ;
 bool flash = false;
+bool turn = false;
+float speed =1;
+
 void reshapeWindow(int width,int height);
 
 /* Executed when a regular key is pressed */
@@ -247,40 +259,40 @@ void keyboardDown (unsigned char key, int x, int y)
         case 'D':
         if(helicopter == false){
             if(posx>0.0f)
-                posx-=0.05f;
+                posx-=0.05f*speed;
         }
         else{
-            helcamx+=0.05f;
+            helcamx+=0.05f*speed;
         }
         break;
         case 'a':
         case 'A':
         if(helicopter == false){
             if(posx<1.95f)
-                posx+=0.05f;
+                posx+=0.05f*speed;
         }
         else{
-            helcamx -=0.05f;
+            helcamx -=0.05f*speed;
         }
         break;
         case 'w':
         case 'W':
         if(helicopter == false){
             if(posz<1.95f)
-                posz+=0.05f;
+                posz+=0.05f*speed;
         }
         else{
-            helcamy -=0.05f;
+            helcamy -=0.05f*speed;
         }
         break;
         case 's':
         case 'S':
             if(helicopter == false){
                 if(posz>0.0f)
-                    posz-=0.05f;
+                    posz-=0.05f*speed;
             }
             else{
-                helcamy +=0.05f;
+                helcamy +=0.05f*speed;
             }
         break;
         case 'f':
@@ -293,6 +305,7 @@ void keyboardDown (unsigned char key, int x, int y)
             tame =0 ;
             bounce = true;
         }
+        sound1.play();
         break;
         case 13:
             campos++;
@@ -303,6 +316,25 @@ void keyboardDown (unsigned char key, int x, int y)
             }
             else
                 helicopter = false;
+        break;
+        // case 32:
+        //     sound1.play();
+        // break;
+        case 'c':
+        case 'C':
+            turn = !turn;
+        break;
+        case 'v':
+        case 'V':
+            dir_jump *=-1;
+        break;
+        case 'n':
+        case 'N':
+            speed +=0.3;
+        break;
+        case 'b':
+        case 'B':
+            speed -=0.3;
         break;
         default:
         break;
@@ -920,7 +952,7 @@ void createobstacle ()
   // create3DObject creates and returns a handle to a VAO that can be used later
   srand((unsigned)time(0));
   int temp,temp2,temp3;
-  for(int r=1;r<=num_obs;r++)
+  for(int r=1;r<=50;r++)
   {
       obstacle[r] = create3DObject(GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL);
       mov[r] = rand()%5;
@@ -949,8 +981,8 @@ void createobstacle ()
 
 void fall_down(){
     for(int r=1;r<=num_obs;r++){
-        if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) &&
-            visibility[r]<appear_time*2/3 && (botpos[2]-0.09f+jump)-(botpos[2]-0.12f+mov[r])<0.005) {
+        if(botpos[1]+posx<=(obsx[r]+0.095f) && botpos[1]+posx>=(obsx[r]-0.095f) && botpos[3]+posz<=(obsz[r]+0.095) && botpos[3]+posz>=(obsz[r]-0.095) &&
+            visibility[r]<appear_time*2/3 && (botpos[2]-0.09f+jump)-(botpos[2]-0.12f+mov[r])<0.5) {
             cout<<"You Lose!!"<<endl;
             exit(0);
         }
@@ -962,14 +994,14 @@ void check_ground(){
             bounce=false;
             return ;
         }
-        for(int r=1;r<=num_obs;r++){
-            if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) && visibility[r]<appear_time*2/3) {
-                // cout<<"got it"<<endl;
-                // exit(0);
-                jump+=mov[r];
-                bounce=false;
-            }
-        }
+        // for(int r=1;r<=num_obs;r++){
+        //     // if(botpos[1]+posx<=(obsx[r]+0.05f) && botpos[1]+posx>=(obsx[r]-0.05f) && botpos[3]+posz<=(obsz[r]+0.05) && botpos[3]+posz>=(obsz[r]-0.05) && visibility[r]<appear_time*2/3) {
+        //     //     // cout<<"got it"<<endl;
+        //     //     // exit(0);
+        //     //     // jump+=mov[r];
+        //     //     bounce=false;
+        //     }
+        // }
 }
 
 void jump_func(){
@@ -981,6 +1013,11 @@ void jump_func(){
     jump = uy*tame + gravity*tame*tame/2;
     uy=vy;
     jump /=2;
+    if(turn==true)
+      posx +=jumpx*dir_jump*speed;
+    else
+      posz += jumpz*dir_jump*speed;
+
 
 }
 
@@ -1046,10 +1083,20 @@ void cameraposition(){
 
 }
 
-
+void checkdestination()
+{
+    if(posx>1.95 && posz>1.95){
+        cout<<"Reached The destination"<<endl;
+        cout<<"Yippe have now leveled up!!"<<endl;
+        num_obs *=2;
+        posx=0;
+        posz=0;
+    }
+}
 void draw ()
 {
   // clear the color and depth in the frame buffer
+  checkdestination();
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // use the loaded shader program
@@ -1285,18 +1332,25 @@ void initGL (int width, int height)
 	cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 }
 
+
 int main (int argc, char** argv)
 {
 	int width = 600;
 	int height = 600;
 
     initGLUT (argc, argv, width, height);
+    // FILE * pFile;
+    // pFile = fopen ( "car_x.wav" , "rb" );
+    // if(!buffer1.loadFromFile("Helicopter.wav"))
+    //     return -1;
+    sound1.setBuffer(buffer1);
 
     addGLUTMenus ();
 
 	initGL (width, height);
 
     glutMainLoop ();
+
 
     return 0;
 }
