@@ -244,6 +244,12 @@ float helcamy =0 ;
 bool flash = false;
 bool turn = false;
 float speed =1;
+float jump_speed = 1;
+bool jump_allow = false;
+float jump_max=0;
+float jump_min =100000 ;
+
+
 
 void reshapeWindow(int width,int height);
 
@@ -304,8 +310,10 @@ void keyboardDown (unsigned char key, int x, int y)
             uy = 15;
             tame =0 ;
             bounce = true;
+            jump_allow = true;
+            jump_max = 0;
+            jump_min = 100000;
         }
-        sound1.play();
         break;
         case 13:
             campos++;
@@ -335,6 +343,14 @@ void keyboardDown (unsigned char key, int x, int y)
         case 'b':
         case 'B':
             speed -=0.3;
+        break;
+        case 'g':
+        case 'G':
+            jump_speed-=0.3;
+        break;
+        case 'h':
+        case 'H':
+            jump_speed+=0.3;
         break;
         default:
         break;
@@ -396,6 +412,7 @@ void mouseClick (int button, int state, int x, int y)
                 if (campos==4){
                     helicopter = true;
                     helcamx=helcamy=0;
+                    sound1.play();
                 }
                 else
                     helicopter = false;
@@ -1013,11 +1030,16 @@ void jump_func(){
     jump = uy*tame + gravity*tame*tame/2;
     uy=vy;
     jump /=2;
+    jump *= jump_speed;
     if(turn==true)
       posx +=jumpx*dir_jump*speed;
     else
       posz += jumpz*dir_jump*speed;
-
+    if(jump_max<jump)
+        jump_max = jump;
+    if(jump_min>jump)
+            jump_min=jump;
+    // cout<<jump_max<<" "<<jump_min<<endl;
 
 }
 
@@ -1093,10 +1115,28 @@ void checkdestination()
         posz=0;
     }
 }
+
+int health = 5;
+void check_health(){
+    if(jump_max>0.25 && jump_allow==true)
+    {
+            jump_allow = false;
+            health-=1;
+            cout<<"Don't try to jump very deep, you got injury."<<endl;
+            cout<<"Health = "<<health<<endl;
+            if(health<0)
+            {
+                cout<<"soory you lose the game"<<endl;
+            }
+    }
+}
+
 void draw ()
 {
   // clear the color and depth in the frame buffer
   checkdestination();
+  check_health();
+
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // use the loaded shader program
